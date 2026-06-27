@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive neuroscience textbook covering spinal cord tracts, motor and sensory pathways, and clinical correlations">
+  <title>Neuroscience Interactive Textbook</title>
+  <style>
+    :root {
+      --nav: 300px;
+      --primary: #0f4c81;
+      --bg: #eef4fb;
+      --card: #fff;
+      --text-dark: #333;
+      --border: #ccc;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font: 16px/1.6 "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      z-index: 1000;
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    header b {
+      font-size: 18px;
+      margin: 0 12px;
+    }
+
+    #toggle {
+      margin-right: 10px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    #toggle:hover {
+      opacity: 0.8;
+    }
+
+    #search {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      font: inherit;
+      max-width: 300px;
+    }
+
+    #search:focus {
+      outline: 2px solid #ff9800;
+      outline-offset: 2px;
+    }
+
+    .wrap {
+      display: flex;
+      margin-top: 56px;
+      height: calc(100vh - 56px);
+    }
+
+    aside {
+      width: var(--nav);
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    aside.hide {
+      transform: translateX(-100%);
+      position: absolute;
+      z-index: 999;
+    }
+
+    aside h3 {
+      padding: 12px;
+      margin: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    aside > button {
+      display: block;
+      width: calc(100% - 12px);
+      margin: 6px;
+      padding: 8px 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    aside > button:hover {
+      background: #0d3a61;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      padding: 10px;
+      user-select: none;
+    }
+
+    summary:hover:not(.chapter > summary):not(.sub > summary) {
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+
+    details > summary {
+      outline: none;
+    }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .chapter,
+    .sub {
+      background: var(--card);
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 6px var(--shadow);
+      overflow: hidden;
+    }
+
+    .chapter > div,
+    .sub > div {
+      padding: 0 15px 15px;
+    }
+
+    .tocgrp summary {
+      background: #edf5ff;
+    }
+
+    .chapter > summary {
+      background: linear-gradient(135deg, #0f4c81 0%, #1565a0 100%);
+      color: #fff;
+      padding: 12px 15px !important;
+      border-radius: 8px 8px 0 0;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chapter > summary:hover {
+      background: linear-gradient(135deg, #0d3a61 0%, #0d4a90 100%);
+    }
+
+    .sub > summary {
+      background: linear-gradient(135deg, #1976d2 0%, #1565a0 100%);
+      color: #fff;
+      padding: 10px 15px !important;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 !important;
+    }
+
+    .sub > summary:hover {
+      background: linear-gradient(135deg, #1565a0 0%, #0d47a1 100%);
+    }
+
+    .tocgrp > div a {
+      display: block;
+      padding: 6px 20px;
+      text-decoration: none;
+      color: #174;
+      transition: background 0.2s;
+    }
+
+    .tocgrp > div a:hover {
+      background: #f0f0f0;
+      text-decoration: underline;
+    }
+
+    .tocgrp > div a:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border: 1px solid #888;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #dcecff;
+      position: sticky;
+      top: 0;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .tbl {
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+
+    .box {
+      padding: 12px;
+      border-left: 5px solid;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+
+    .clinical {
+      background: #eef7ff;
+      border-color: #2196f3;
+    }
+
+    .exam {
+      background: #fff4df;
+      border-color: #ff9800;
+    }
+
+    .important {
+      background: #ffe8e8;
+      border-color: #d32f2f;
+    }
+
+    .learn {
+      background: #ecfff0;
+      border-color: #2e7d32;
+    }
+
+    .float {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    button {
+      padding: 8px 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #0d3a61;
+    }
+
+    button:focus-visible {
+      outline: 2px solid #ff9800;
+      outline-offset: 2px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 15px 0;
+    }
+
+    @media (max-width: 900px) {
+      aside {
+        position: fixed;
+        left: 0;
+        top: 56px;
+        z-index: 999;
+        width: var(--nav);
+      }
+
+      aside.hide {
+        transform: translateX(-100%);
+      }
+
+      main {
+        padding: 15px;
+      }
+
+      header b {
+        display: none;
+      }
+
+      #search {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      :root {
+        --nav: 250px;
+      }
+
+      body {
+        font-size: 14px;
+      }
+
+      header {
+        height: 50px;
+      }
+
+      .wrap {
+        margin-top: 50px;
+        height: calc(100vh - 50px);
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      #search {
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+
+      .float {
+        right: 8px;
+        bottom: 8px;
+      }
+    }
+  </style>
+  <script>
+    function toggleSidebar() {
+      document.getElementById('side').classList.toggle('hide');
+    }
+
+    function filterSections() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const sections = document.querySelectorAll('.sub');
+      sections.forEach(section => {
+        const matches = section.innerText.toLowerCase().includes(query);
+        section.style.display = matches ? 'block' : 'none';
+      });
+    }
+
+    function toggleAllDetails(open) {
+      document.querySelectorAll('details').forEach(detail => {
+        detail.open = open;
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.innerWidth <= 900) {
+        document.querySelectorAll('aside a').forEach(link => {
+          link.addEventListener('click', () => {
+            document.getElementById('side').classList.add('hide');
+          });
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <button id="toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+    <b>Neuroscience Interactive Textbook</b>
+    <input id="search" type="search" onkeyup="filterSections()" placeholder="Search sections..." aria-label="Search sections">
+  </header>
+
+  <div class="wrap">
+    <aside id="side" role="navigation" aria-label="Table of contents">
+      <h3>Contents</h3>
+      <button onclick="toggleAllDetails(true)">Expand All</button>
+      <button onclick="toggleAllDetails(false)">Collapse All</button>
+
+      <details class="tocgrp">
+        <summary>Spinal Cord Tracts</summary>
+        <div><a href="#s2">Motor and Sensory Pathways</a></div>
+        <details class="tocgrp">
+          <summary>Part 1: Introduction to Spinal Cord Tracts</summary>
+          <div>
+            <a href="#s4">1.1 White Matter Organisation</a>
+            <a href="#s5">1.2 Classification Overview</a>
+          </div>
+          <details class="tocgrp">
+            <summary>Part 2: Descending Motor Tracts</summary>
+            <div>
+              <a href="#s7">2.1 The Pyramidal Tract (Corticospinal Tract)</a>
+              <a href="#s8">2.2 The Corticobulbar Tract</a>
+              <a href="#s9">2.3 The Extrapyramidal Tracts</a>
+              <a href="#s10">2.4 Pyramidal vs. Extrapyramidal — Comparison</a>
+            </div>
+            <details class="tocgrp">
+              <summary>Part 3: Motor Neuron Lesions — UMN vs. LMN</summary>
+              <div>
+                <a href="#s12">3.1 Upper Motor Neuron Lesion (UMNL)</a>
+                <a href="#s13">3.2 Lower Motor Neuron Lesion (LMNL)</a>
+                <a href="#s14">3.3 Spinal Shock</a>
+                <a href="#s15">3.4 UMN vs. LMN — Comparison Table</a>
+              </div>
+              <details class="tocgrp">
+                <summary>Part 4: Ascending Sensory Tracts</summary>
+                <div>
+                  <a href="#s17">4.1 The Three-Neuron Chain</a>
+                  <a href="#s18">4.2 Dorsal Column Pathway (Medial Lemniscal System)</a>
+                  <a href="#s19">4.3 Spinothalamic Tracts</a>
+                  <a href="#s20">4.4 Spinocerebellar Tracts</a>
+                  <a href="#s21">4.5 Other Ascending Tracts</a>
+                  <a href="#s22">4.6 Conscious vs. Unconscious Sensation</a>
+                </div>
+                <details class="tocgrp">
+                  <summary>Part 5: Clinical Correlations</summary>
+                  <div>
+                    <a href="#s24">5.1 Brown-Séquard Syndrome (Cord Hemisection)</a>
+                    <a href="#s25">5.2 Central Cord Syndrome</a>
+                    <a href="#s26">5.3 Anterior Cord Syndrome</a>
+                    <a href="#s27">5.4 Posterior Cord Syndrome</a>
+                    <a href="#s28">5.5 Syringomyelia</a>
+                    <a href="#s29">5.6 Tabes Dorsalis</a>
+                    <a href="#s30">5.7 Subacute Combined Degeneration (SCD)</a>
+                    <a href="#s31">5.8 Spinal Cord Compression</a>
+                    <a href="#s32">5.9 Stroke and Hemiplegia Patterns</a>
+                  </div>
+                </details>
+              </details>
+            </details>
+          </details>
+        </details>
+      </details>
+    </aside>
+
+    <main role="main">
+      <details class="chapter" open id="p1">
+        <summary>Spinal Cord Tracts</summary>
+        <div>
+          <details class="sub" id="s2">
+            <summary>Motor and Sensory Pathways</summary>
+            <div><p></p><hr><p></p></div>
+          </details>
+        </div>
+      </details>
+
+      <details class="chapter" open id="p3">
+        <summary>Part 1: Introduction to Spinal Cord Tracts</summary>
+        <div>
+          <p>The spinal cord is the principal conduit between the brain and the rest of the body. Its white matter is organised into discrete bundles of nerve fibres called tracts, each dedicated to transmitting a specific category of information in one direction. Mastering this organisation is essential for understanding both normal neurological function and the clinical patterns produced by injury.</p>
+
+          <details class="sub" id="s4">
+            <summary>1.1 White Matter Organisation</summary>
+            <div>
+              <p>The white matter of the spinal cord is divided into three pairs of funiculi (columns): the posterior (dorsal), lateral, and anterior (ventral) funiculi. Tracts within these funiculi are grouped into two broad functional categories:</p>
+              <ul>
+                <li>Descending (motor) tracts: carry motor commands from higher brain centres down to the anterior horn cells (AHC) of the spinal cord, which then drive skeletal muscle.</li>
+                <li>Ascending (sensory) tracts: carry sensory information gathered from receptors in the skin, muscles, joints, and viscera upward to the brainstem, cerebellum, and cerebral cortex.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s5">
+            <summary>1.2 Classification Overview</summary>
+            <div>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Category</th><th>Main Tracts</th><th>Primary Function</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Descending (Motor)</td><td>Corticospinal (Pyramidal), Extrapyramidal group, Corticobulbar</td><td>Voluntary movement, posture, reflex modulation, cranial nerve control</td></tr>
+                    <tr><td>Ascending (Sensory)</td><td>Dorsal columns, Spinothalamic, Spinocerebellar</td><td>Proprioception, touch, pain, temperature, coordination</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Understanding whether a tract crosses the midline (decussates), and at what level, is the key to interpreting clinical findings after spinal cord injury.</p>
+            </div>
+          </details>
+        </div>
+      </details>
+
+      <details class="chapter" open id="p6">
+        <summary>Part 2: Descending Motor Tracts</summary>
+        <div>
+          <p>Voluntary movement is not produced by a single pathway. Two complementary systems — the pyramidal and extrapyramidal tracts — work in close anatomical proximity and functional synergy to produce coordinated, purposeful movement.</p>
+
+          <details class="sub" id="s7">
+            <summary>2.1 The Pyramidal Tract (Corticospinal Tract)</summary>
+            <div>
+              <p>The pyramidal tract is the principal descending motor pathway responsible for voluntary, especially fine skilled, movement. It takes a direct, largely uninterrupted route from the cerebral cortex to the anterior horn cells of the spinal cord.</p>
+              <h3>Origin and Composition</h3>
+              <ul>
+                <li>30% from the primary motor cortex (Area 4)</li>
+                <li>30% from the premotor cortex (Area 6)</li>
+                <li>40% from the somatic sensory cortices (Areas S I and S II)</li>
+              </ul>
+              <h3>Anatomical Pathway</h3>
+              <ul>
+                <li>Cortex → Corona Radiata → Internal Capsule → Midbrain → Pons → Medullary Pyramids</li>
+                <li>Motor Decussation: ~80% of fibres cross at medulla-spinal cord junction</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s8">
+            <summary>2.2 The Corticobulbar Tract</summary>
+            <div>
+              <p>The corticobulbar tract controls voluntary movements of the head, face, and neck via cranial nerve nuclei in the brainstem.</p>
+              <h3>Key Features</h3>
+              <ul>
+                <li>Origin: Lateral motor cortex (precentral gyrus)</li>
+                <li>Termination: Cranial nerve motor nuclei (III, IV, V, VI, VII, IX, X, XI, XII)</li>
+                <li>Most fibres decussate at the level of their target nucleus</li>
+              </ul>
+              <div class="box important">Important: Lower facial nucleus receives only contralateral innervation, causing forehead-sparing weakness in UMN lesions.</div>
+            </div>
+          </details>
+
+          <details class="sub" id="s9">
+            <summary>2.3 The Extrapyramidal Tracts</summary>
+            <div>
+              <p>The extrapyramidal system encompasses all descending motor pathways other than the corticospinal tract, relaying through multiple subcortical structures.</p>
+              <h3>The Five Extrapyramidal Tracts</h3>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Tract</th><th>Origin</th><th>Primary Role</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Rubrospinal</td><td>Red nucleus (midbrain)</td><td>Fine limb movements; flexor tone</td></tr>
+                    <tr><td>Reticulospinal</td><td>Reticular formation</td><td>Postural control; reflex modulation</td></tr>
+                    <tr><td>Vestibulospinal</td><td>Vestibular nuclei</td><td>Balance and equilibrium; extensor tone</td></tr>
+                    <tr><td>Tectospinal</td><td>Superior/inferior colliculus</td><td>Visual and auditory reflexes</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub" id="s10">
+            <summary>2.4 Pyramidal vs. Extrapyramidal — Comparison</summary>
+            <div>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Feature</th><th>Pyramidal Tract</th><th>Extrapyramidal Tracts</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Route</td><td>Direct cortex → AHC</td><td>Indirect, multiple relay stations</td></tr>
+                    <tr><td>Movement type</td><td>Fine skilled, distal</td><td>Gross postural, proximal</td></tr>
+                    <tr><td>Stretch reflex</td><td>Facilitatory only</td><td>Facilitatory or inhibitory</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </details>
+
+      <details class="chapter" open id="p11">
+        <summary>Part 3: Motor Neuron Lesions — UMN vs. LMN</summary>
+        <div>
+          <p>Motor neuron lesions are classified by anatomical level relative to the anterior horn cell (AHC). This distinction determines the clinical syndrome.</p>
+
+          <details class="sub" id="s12">
+            <summary>3.1 Upper Motor Neuron Lesion (UMNL)</summary>
+            <div>
+              <p>Damage to descending motor fibres above the AHC level.</p>
+              <h3>Characteristic Signs</h3>
+              <ul>
+                <li>Spasticity (clasp-knife phenomenon)</li>
+                <li>Exaggerated deep tendon reflexes</li>
+                <li>Babinski's sign present</li>
+                <li>Widespread paralysis (hemiplegia/monoplegia)</li>
+                <li>Minimal muscle atrophy</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s13">
+            <summary>3.2 Lower Motor Neuron Lesion (LMNL)</summary>
+            <div>
+              <p>Damage to the AHC, ventral nerve root, or peripheral motor nerve.</p>
+              <h3>Characteristic Signs</h3>
+              <ul>
+                <li>Localised flaccid paralysis</li>
+                <li>Loss of all muscle tone (flaccidity)</li>
+                <li>Absent reflexes</li>
+                <li>Marked muscle atrophy</li>
+                <li>Fasciculations may be present</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s14">
+            <summary>3.3 Spinal Shock</summary>
+            <div>
+              <p>Occurs immediately after acute UMN lesion (e.g., spinal cord transection).</p>
+              <ul>
+                <li>Transient flaccid paralysis below the lesion</li>
+                <li>Loss of all reflexes</li>
+                <li>Duration: typically 1-3 weeks</li>
+                <li>Gradually transitions to classic UMN syndrome</li>
+              </ul>
+              <div class="box important">Clinical Note: Flaccidity in acute phase does NOT rule out UMN lesion.</div>
+            </div>
+          </details>
+
+          <details class="sub" id="s15">
+            <summary>3.4 UMN vs. LMN — Comparison Table</summary>
+            <div>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Feature</th><th>Upper Motor Neuron</th><th>Lower Motor Neuron</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Tone</td><td>Increased (spasticity)</td><td>Decreased (flaccidity)</td></tr>
+                    <tr><td>Deep reflexes</td><td>Exaggerated</td><td>Absent</td></tr>
+                    <tr><td>Babinski's sign</td><td>Present</td><td>Absent</td></tr>
+                    <tr><td>Muscle atrophy</td><td>Minimal (late)</td><td>Marked and early</td></tr>
+                    <tr><td>Paralysis distribution</td><td>Widespread</td><td>Localised</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </details>
+
+      <details class="chapter" open id="p16">
+        <summary>Part 4: Ascending Sensory Tracts</summary>
+        <div>
+          <p>Ascending tracts carry sensory information from the body to higher brain centres. Sensations may be conscious or unconscious.</p>
+
+          <details class="sub" id="s17">
+            <summary>4.1 The Three-Neuron Chain</summary>
+            <div>
+              <p>Most ascending sensory pathways share a common three-neuron architecture:</p>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Order</th><th>Cell Body Location</th><th>Key Details</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>1st-order neuron</td><td>Posterior (dorsal) root ganglion</td><td>Peripheral receptor to cord entry</td></tr>
+                    <tr><td>2nd-order neuron</td><td>Posterior grey column (dorsal horn)</td><td>Usually decussates and ascends to thalamus</td></tr>
+                    <tr><td>3rd-order neuron</td><td>Thalamus (VPL nucleus)</td><td>Projects to primary somatosensory cortex</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub" id="s18">
+            <summary>4.2 Dorsal Column Pathway (Medial Lemniscal System)</summary>
+            <div>
+              <p>Transmits discriminative sensations: fine touch, vibration, conscious proprioception.</p>
+              <h3>Key Anatomical Features</h3>
+              <ul>
+                <li>Ipsilateral ascent in posterior white column without synapsing in cord</li>
+                <li>Fasciculus gracilis: lower limb and trunk (T7 and below)</li>
+                <li>Fasciculus cuneatus: upper limb and trunk (T6 and above)</li>
+                <li>Synapse in medulla: nucleus gracilis and nucleus cuneatus</li>
+                <li>Decussation: crosses as medial lemniscus to contralateral VPL thalamus</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s19">
+            <summary>4.3 Spinothalamic Tracts</summary>
+            <div>
+              <p>Primary conduits for pain, temperature, and crude touch. Crosses midline within spinal cord at entry level.</p>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Tract</th><th>Modalities</th><th>Pathway Notes</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Lateral Spinothalamic</td><td>Pain and temperature</td><td>Crosses within 1–2 segments. Ascends in lateral funiculus.</td></tr>
+                    <tr><td>Anterior Spinothalamic</td><td>Crude touch and pressure</td><td>Crosses near entry level. Ascends in anterior funiculus.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub" id="s20">
+            <summary>4.4 Spinocerebellar Tracts</summary>
+            <div>
+              <p>Carry unconscious proprioceptive signals to cerebellum for coordination.</p>
+              <h3>Posterior Spinocerebellar Tract</h3>
+              <ul>
+                <li>Origin: Clarke's column (C8–L3)</li>
+                <li>Course: Uncrossed ascent in posterolateral white column</li>
+                <li>Entry: Inferior cerebellar peduncle</li>
+                <li>Function: Lower limb and trunk proprioception</li>
+              </ul>
+              <h3>Anterior Spinocerebellar Tract</h3>
+              <ul>
+                <li>Origin: Clarke's column or dorsal horn</li>
+                <li>Course: Crosses in cord, then crosses back in cerebellum (double crossing)</li>
+                <li>Entry: Superior cerebellar peduncle</li>
+                <li>Result: Ipsilateral cerebellar termination</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s21">
+            <summary>4.5 Other Ascending Tracts</summary>
+            <div>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Tract</th><th>Destination</th><th>Function</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Spinotectal</td><td>Superior colliculus</td><td>Pain/temperature; visual orienting reflexes</td></tr>
+                    <tr><td>Spinoreticular</td><td>Reticular formation</td><td>Diffuse pain; arousal and consciousness</td></tr>
+                    <tr><td>Spino-olivary</td><td>Inferior olivary nucleus</td><td>Proprioceptive/cutaneous data to cerebellum</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub" id="s22">
+            <summary>4.6 Conscious vs. Unconscious Sensation</summary>
+            <div>
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr><th>Feature</th><th>Conscious Sensation</th><th>Unconscious Sensation</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Final destination</td><td>Cerebral cortex</td><td>Cerebellum / Brainstem</td></tr>
+                    <tr><td>Awareness</td><td>Perceived by individual</td><td>Automatic processing</td></tr>
+                    <tr><td>Primary tracts</td><td>Dorsal columns, Spinothalamic</td><td>Spinocerebellar, Spinoreticular</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </details>
+
+      <details class="chapter" open id="p23">
+        <summary>Part 5: Clinical Correlations</summary>
+        <div>
+          <p>Different pathological conditions produce distinct patterns of deficits based on which tracts are damaged.</p>
+
+          <details class="sub" id="s24">
+            <summary>5.1 Brown-Séquard Syndrome (Cord Hemisection)</summary>
+            <div>
+              <p>Damage to one lateral half of the spinal cord produces dissociated sensory loss.</p>
+              <div class="box important">Pattern: Ipsilateral loss of proprioception/vibration/touch + Ipsilateral UMN signs + Contralateral loss of pain/temperature</div>
+            </div>
+          </details>
+
+          <details class="sub" id="s25">
+            <summary>5.2 Central Cord Syndrome</summary>
+            <div>
+              <p>Most common incomplete spinal cord injury; typically from hyperextension in cervical spondylosis.</p>
+              <ul>
+                <li>Upper limbs > Lower limbs (motor weakness)</li>
+                <li>Dissociated sensory loss with sacral sparing</li>
+                <li>Pain/temperature loss in cape-like distribution</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s26">
+            <summary>5.3 Anterior Cord Syndrome</summary>
+            <div>
+              <p>Results from anterior spinal artery occlusion or anterior 2/3 cord damage.</p>
+              <ul>
+                <li>Bilateral spastic paralysis (corticospinal damage)</li>
+                <li>Bilateral pain/temperature loss (spinothalamic damage)</li>
+                <li>Preserved vibration/proprioception (dorsal columns spared)</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s27">
+            <summary>5.4 Posterior Cord Syndrome</summary>
+            <div>
+              <p>Rare but clinically important syndrome affecting dorsal columns.</p>
+              <ul>
+                <li>Loss of vibration, proprioception, fine touch</li>
+                <li>Preserved pain/temperature sensation</li>
+                <li>Sensory ataxia with positive Romberg's sign</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s28">
+            <summary>5.5 Syringomyelia</summary>
+            <div>
+              <p>Fluid-filled cavity within spinal cord preferentially destroys crossing spinothalamic fibres.</p>
+              <ul>
+                <li>Bilateral loss of pain/temperature at lesion level</li>
+                <li>Preserved vibration/proprioception (dissociated sensory loss)</li>
+                <li>Cape-like distribution (upper limbs/shoulders first)</li>
+              </ul>
+              <div class="box learn">Diagnostic hallmark: Cannot feel pin/heat but can feel cotton swab.</div>
+            </div>
+          </details>
+
+          <details class="sub" id="s29">
+            <summary>5.6 Tabes Dorsalis</summary>
+            <div>
+              <p>Late neurosyphilis causing bilateral degeneration of posterior roots and dorsal columns (particularly lumbosacral).</p>
+              <ul>
+                <li>Loss of vibration and position sense</li>
+                <li>Loss of muscle stretch reflexes</li>
+                <li>Positive Romberg's sign</li>
+                <li>Ataxic (stamping) gait</li>
+                <li>Pain/temperature sensation INTACT</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s30">
+            <summary>5.7 Subacute Combined Degeneration (SCD)</summary>
+            <div>
+              <p>Progressive degeneration of dorsal and lateral columns from vitamin B12 deficiency.</p>
+              <ul>
+                <li>Bilateral loss of vibration/proprioception (dorsal columns)</li>
+                <li>Spastic weakness with UMN signs (corticospinal tracts)</li>
+                <li>Sensory ataxia with positive Romberg's sign</li>
+                <li>Peripheral neuropathy may be present</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s31">
+            <summary>5.8 Spinal Cord Compression</summary>
+            <div>
+              <p>Common cause of myelopathy from tumours, abscesses, haematomas, or disc herniation.</p>
+              <ul>
+                <li>Sensory level (distinct level below which sensation impaired)</li>
+                <li>UMN signs below compression level</li>
+                <li>LMN signs at compression level</li>
+                <li>Late bowel/bladder dysfunction</li>
+              </ul>
+              <h3>Common Causes</h3>
+              <ul>
+                <li>Metastatic carcinoma (most common)</li>
+                <li>Meningioma</li>
+                <li>Neurofibroma</li>
+                <li>Disc herniation</li>
+                <li>Spinal epidural abscess</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="sub" id="s32">
+            <summary>5.9 Stroke and Hemiplegia Patterns</summary>
+            <div>
+              <p>Stroke patterns reflect anatomy of decussation and fibre arrangement at each level.</p>
+              <ul>
+                <li><strong>Cortical/corona radiata lesion:</strong> Monoplegia (specific body part affected)</li>
+                <li><strong>Internal capsule lesion:</strong> Dense contralateral hemiplegia</li>
+                <li><strong>Brainstem lesion:</strong> Crossed (alternating) hemiplegia with ipsilateral cranial nerve involvement</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </details>
+    </main>
+  </div>
+
+  <div class="float">
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Scroll to top">↑ Top</button>
+  </div>
+</body>
+</html>
